@@ -4,7 +4,7 @@
 #
 Name     : aom
 Version  : 1.0.0
-Release  : 2
+Release  : 3
 URL      : https://aomedia.googlesource.com/aom/+archive/refs/heads/master.tar.gz
 Source0  : https://aomedia.googlesource.com/aom/+archive/refs/heads/master.tar.gz
 Summary  : GoogleTest (with main() function)
@@ -18,6 +18,7 @@ BuildRequires : glibc-dev
 BuildRequires : nasm
 BuildRequires : perl
 BuildRequires : python3
+BuildRequires : yasm
 
 %description
 # AV1 Codec Library
@@ -89,7 +90,7 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C.UTF-8
-export SOURCE_DATE_EPOCH=1586982333
+export SOURCE_DATE_EPOCH=1586984033
 mkdir -p clr-build
 pushd clr-build
 export GCC_IGNORE_WERROR=1
@@ -100,13 +101,35 @@ export CFLAGS="$CFLAGS -O3 -ffat-lto-objects -flto=4 "
 export FCFLAGS="$FFLAGS -O3 -ffat-lto-objects -flto=4 "
 export FFLAGS="$FFLAGS -O3 -ffat-lto-objects -flto=4 "
 export CXXFLAGS="$CXXFLAGS -O3 -ffat-lto-objects -flto=4 "
-%cmake ..
+%cmake .. -DBUILD_SHARED_LIBS=1 \
+-DENABLE_NASM=on
+make  %{?_smp_mflags}  VERBOSE=1
+popd
+mkdir -p clr-build-avx2
+pushd clr-build-avx2
+export GCC_IGNORE_WERROR=1
+export AR=gcc-ar
+export RANLIB=gcc-ranlib
+export NM=gcc-nm
+export CFLAGS="$CFLAGS -O3 -ffat-lto-objects -flto=4 -march=haswell "
+export FCFLAGS="$FFLAGS -O3 -ffat-lto-objects -flto=4 -march=haswell "
+export FFLAGS="$FFLAGS -O3 -ffat-lto-objects -flto=4 -march=haswell "
+export CXXFLAGS="$CXXFLAGS -O3 -ffat-lto-objects -flto=4 -march=haswell "
+export CFLAGS="$CFLAGS -march=haswell -m64"
+export CXXFLAGS="$CXXFLAGS -march=haswell -m64"
+export FFLAGS="$FFLAGS -march=haswell -m64"
+export FCFLAGS="$FCFLAGS -march=haswell -m64"
+%cmake .. -DBUILD_SHARED_LIBS=1 \
+-DENABLE_NASM=on
 make  %{?_smp_mflags}  VERBOSE=1
 popd
 
 %install
-export SOURCE_DATE_EPOCH=1586982333
+export SOURCE_DATE_EPOCH=1586984033
 rm -rf %{buildroot}
+pushd clr-build-avx2
+%make_install_avx2  || :
+popd
 pushd clr-build
 %make_install
 popd
@@ -122,6 +145,8 @@ popd
 %defattr(-,root,root,-)
 /usr/bin/aomdec
 /usr/bin/aomenc
+/usr/bin/haswell/aomdec
+/usr/bin/haswell/aomenc
 
 %files dev
 %defattr(-,root,root,-)
