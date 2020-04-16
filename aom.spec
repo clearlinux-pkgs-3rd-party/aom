@@ -4,13 +4,14 @@
 #
 Name     : aom
 Version  : 1.0.0
-Release  : 3
+Release  : 4
 URL      : https://aomedia.googlesource.com/aom/+archive/refs/heads/master.tar.gz
 Source0  : https://aomedia.googlesource.com/aom/+archive/refs/heads/master.tar.gz
 Summary  : GoogleTest (with main() function)
 Group    : Development/Tools
 License  : BSD-2-Clause
 Requires: aom-bin = %{version}-%{release}
+Requires: aom-lib = %{version}-%{release}
 BuildRequires : buildreq-cmake
 BuildRequires : doxygen
 BuildRequires : git
@@ -73,12 +74,21 @@ bin components for the aom package.
 %package dev
 Summary: dev components for the aom package.
 Group: Development
+Requires: aom-lib = %{version}-%{release}
 Requires: aom-bin = %{version}-%{release}
 Provides: aom-devel = %{version}-%{release}
 Requires: aom = %{version}-%{release}
 
 %description dev
 dev components for the aom package.
+
+
+%package lib
+Summary: lib components for the aom package.
+Group: Libraries
+
+%description lib
+lib components for the aom package.
 
 
 %prep
@@ -90,7 +100,7 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C.UTF-8
-export SOURCE_DATE_EPOCH=1586984033
+export SOURCE_DATE_EPOCH=1587030005
 mkdir -p clr-build
 pushd clr-build
 export GCC_IGNORE_WERROR=1
@@ -102,7 +112,8 @@ export FCFLAGS="$FFLAGS -O3 -ffat-lto-objects -flto=4 "
 export FFLAGS="$FFLAGS -O3 -ffat-lto-objects -flto=4 "
 export CXXFLAGS="$CXXFLAGS -O3 -ffat-lto-objects -flto=4 "
 %cmake .. -DBUILD_SHARED_LIBS=1 \
--DENABLE_NASM=on
+-DENABLE_NASM=on \
+-DCMAKE_INSTALL_LIBDIR=lib64
 make  %{?_smp_mflags}  VERBOSE=1
 popd
 mkdir -p clr-build-avx2
@@ -120,12 +131,13 @@ export CXXFLAGS="$CXXFLAGS -march=haswell -m64"
 export FFLAGS="$FFLAGS -march=haswell -m64"
 export FCFLAGS="$FCFLAGS -march=haswell -m64"
 %cmake .. -DBUILD_SHARED_LIBS=1 \
--DENABLE_NASM=on
+-DENABLE_NASM=on \
+-DCMAKE_INSTALL_LIBDIR=lib64
 make  %{?_smp_mflags}  VERBOSE=1
 popd
 
 %install
-export SOURCE_DATE_EPOCH=1586984033
+export SOURCE_DATE_EPOCH=1587030005
 rm -rf %{buildroot}
 pushd clr-build-avx2
 %make_install_avx2  || :
@@ -136,10 +148,6 @@ popd
 
 %files
 %defattr(-,root,root,-)
-/usr/usr/lib64/libaom.so
-/usr/usr/lib64/libaom.so.0
-/usr/usr/lib64/libaom.so.1.0.0
-/usr/usr/lib64/pkgconfig/aom.pc
 
 %files bin
 %defattr(-,root,root,-)
@@ -159,3 +167,13 @@ popd
 /usr/include/aom/aom_integer.h
 /usr/include/aom/aomcx.h
 /usr/include/aom/aomdx.h
+/usr/lib64/haswell/libaom.so
+/usr/lib64/libaom.so
+/usr/lib64/pkgconfig/aom.pc
+
+%files lib
+%defattr(-,root,root,-)
+/usr/lib64/haswell/libaom.so.0
+/usr/lib64/haswell/libaom.so.1.0.0
+/usr/lib64/libaom.so.0
+/usr/lib64/libaom.so.1.0.0
